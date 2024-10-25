@@ -2,7 +2,7 @@ from unittest import TestCase
 
 from pydantic import ValidationError
 from datetime import date
-from neon_users_service.models import NeonUserConfig, TokenConfig, User
+from neon_users_service.models import NeonUserConfig, TokenConfig, User, MQRequest
 
 
 class TestModelValidation(TestCase):
@@ -74,6 +74,14 @@ class TestModelValidation(TestCase):
         duplicate_user = User(**user_kwargs)
         self.assertNotEqual(default_user, duplicate_user)
         self.assertEqual(default_user.tokens, duplicate_user.tokens)
+
+    def test_mq_request_model(self):
+        valid_model = MQRequest(operation="create", username="test_user")
+        self.assertIsInstance(valid_model, MQRequest)
+        with self.assertRaises(ValidationError):
+            MQRequest(operation="get", username="test")
+        with self.assertRaises(ValidationError):
+            MQRequest(operation="delete", username="test_user", user="test_user")
 
 
 class TestEnumClasses(TestCase):

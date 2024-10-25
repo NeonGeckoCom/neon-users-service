@@ -121,7 +121,7 @@ class TokenConfig(BaseModel):
 
 class User(BaseModel):
     username: str
-    password_hash: Optional[str]
+    password_hash: Optional[str] = None
     user_id: str = Field(default_factory=lambda: str(uuid4()))
     created_timestamp: int = Field(default_factory=lambda: round(time()))
     neon: NeonUserConfig = NeonUserConfig()

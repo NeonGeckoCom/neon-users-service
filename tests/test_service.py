@@ -107,6 +107,13 @@ class TestUsersService(TestCase):
         updated_user = service.update_user(updated_user)
         self.assertEqual(updated_user.password_hash, user_1.password_hash)
 
+        # Input plaintext passwords should be hashed
+        updated_user.password_hash = "test"
+        new_updated_user = service.update_user(updated_user)
+        self.assertNotEqual(updated_user.password_hash,
+                            new_updated_user.password_hash)
+        self.assertEqual(new_updated_user.password_hash, user_1.password_hash)
+
         # Invalid token values
         updated_user.tokens = None
         with self.assertRaises(ValueError):

@@ -5,7 +5,9 @@ from copy import copy
 from typing import Optional
 from ovos_config import Configuration
 from neon_users_service.databases import UserDatabase
-from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError
+from neon_users_service.exceptions import (ConfigurationError,
+                                           AuthenticationError,
+                                           UserNotMatchedError)
 from neon_users_service.models import User
 
 
@@ -88,10 +90,13 @@ class NeonUsersService:
         @param user: The updated user object to update in the database
         @retruns: User object as it exists in the database, after updating
         """
+        # Create a copy to prevent modifying the input object
+        user = copy(user)
         if not user.password_hash:
             raise ValueError("Supplied user password is empty")
         if not isinstance(user.tokens, list):
             raise ValueError("Supplied tokens configuration is not a list")
+        user.password_hash = self._ensure_hashed(user.password_hash)
         # This will raise a `UserNotFound` exception if the user doesn't exist
         return self.database.update_user(user)
 
@@ -104,7 +109,7 @@ class NeonUsersService:
         """
         db_user = self.database.read_user_by_id(user.user_id)
         if db_user != user:
-            raise UserNotFoundError(user)
+            raise UserNotMatchedError(user)
         return self.database.delete_user(user.user_id)
 
     def shutdown(self):

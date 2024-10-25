@@ -11,6 +11,12 @@ class UserNotFoundError(Exception):
     """
 
 
+class UserNotMatchedError(Exception):
+    """
+    Raised when two `User` objects are expected to match and do not.
+    """
+
+
 class ConfigurationError(KeyError):
     """
     Raised when service configuration is not valid.
