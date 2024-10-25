@@ -132,3 +132,10 @@ class User(BaseModel):
 
     def __eq__(self, other):
         return self.model_dump() == other.model_dump()
+
+
+class MQRequest(BaseModel):
+    operation: Literal["create", "read", "update", "delete"]
+    username: str
+    password: Optional[str] = None
+    user: Optional[User] = None
