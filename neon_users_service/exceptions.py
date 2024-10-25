@@ -5,7 +5,7 @@ class UserExistsError(Exception):
     """
 
 
-class UserNotExistsError(Exception):
+class UserNotFoundError(Exception):
     """
     Raised when trying to look up a user that does not exist.
     """

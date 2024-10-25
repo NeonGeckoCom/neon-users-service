@@ -5,7 +5,7 @@ from typing import Optional
 from unittest import TestCase
 
 from neon_users_service.databases.sqlite import SQLiteUserDatabase
-from neon_users_service.exceptions import UserExistsError, UserNotExistsError
+from neon_users_service.exceptions import UserExistsError, UserNotFoundError
 from neon_users_service.models import User, AccessRoles
 
 
@@ -56,9 +56,9 @@ class TestSqlite(TestCase):
         self.assertEqual(self.database.read_user_by_username(user.username),
                          user)
         # Retrieve nonexistent user raises exceptions
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_id("fake-user-id")
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_username("fake-user-username")
 
     def test_update_user(self):
@@ -81,7 +81,7 @@ class TestSqlite(TestCase):
         self.assertEqual(user2.created_timestamp, user.created_timestamp)
         self.assertAlmostEqual(user2.created_timestamp, create_time, delta=2)
         # old username is no longer in the database
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_username("test_user")
         # new username does resolve
         self.assertEqual(self.database.read_user_by_username("updated_name"),
@@ -89,18 +89,18 @@ class TestSqlite(TestCase):
         self.assertEqual(self.database.read_user_by_id(user2.user_id), user2)
 
     def test_delete_user(self):
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.delete_user("user-id")
         user = self.database.create_user(User(username="test_delete",
                                               password_hash="password"))
         # Removal requires UID, not just username
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.delete_user(user.username)
 
         removed_user = self.database.delete_user(user.user_id)
         self.assertEqual(user, removed_user)
 
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_id(user.user_id)
-        with self.assertRaises(UserNotExistsError):
+        with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_username(user.username)

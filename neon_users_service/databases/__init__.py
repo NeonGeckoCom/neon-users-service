@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from neon_users_service.exceptions import UserExistsError, UserNotExistsError
+from neon_users_service.exceptions import UserExistsError, UserNotFoundError
 from neon_users_service.models import User
 
 
@@ -58,14 +58,14 @@ class UserDatabase(ABC):
             # If username is defined, raise an exception
             if self.read_user_by_username(user.username):
                 return True
-        except UserNotExistsError:
+        except UserNotFoundError:
             pass
         try:
             # If user ID is defined, it was likely passed to the `User` object
             # instead of allowing the Factory to generate a new one.
             if self.read_user_by_id(user.user_id):
                 return True
-        except UserNotExistsError:
+        except UserNotFoundError:
             pass
         return False
 

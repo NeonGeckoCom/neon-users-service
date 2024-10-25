@@ -6,7 +6,7 @@ from sqlite3 import connect, Cursor
 from typing import Optional
 
 from neon_users_service.databases import UserDatabase
-from neon_users_service.exceptions import UserNotExistsError, UserExistsError
+from neon_users_service.exceptions import UserNotFoundError, UserExistsError
 from neon_users_service.models import User, AccessRoles
 
 
@@ -47,7 +47,7 @@ class SQLiteUserDatabase(UserDatabase):
             # TODO: Custom exception
             raise RuntimeError(f"User with spec '{user_spec}' has duplicate entries!")
         elif len(rows) == 0:
-            raise UserNotExistsError(user_spec)
+            raise UserNotFoundError(user_spec)
         return rows[0][0]
 
     def read_user_by_id(self, user_id: str) -> User:
@@ -75,7 +75,7 @@ class SQLiteUserDatabase(UserDatabase):
             if self.read_user_by_username(user.username) != existing_id:
                 raise UserExistsError(f"Another user with username "
                                       f"'{user.username}' already exists")
-        except UserNotExistsError:
+        except UserNotFoundError:
             pass
         self.connection.execute(
             f'''UPDATE users SET username = '{user.username}',
