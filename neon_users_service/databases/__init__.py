@@ -47,3 +47,9 @@ class UserDatabase(ABC):
         @param user_id: `user_id` to remove
         @return: User object removed from the database
         """
+
+    def shutdown(self):
+        """
+        Perform any cleanup when a database is no longer being used
+        """
+        pass
