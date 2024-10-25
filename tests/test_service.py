@@ -50,20 +50,69 @@ class TestUsersService(TestCase):
         self.assertNotEqual(user_2, input_user_2)
         service.shutdown()
 
-    def test_authenticate_user(self):
+    def test_read_authenticated_user(self):
         service = NeonUsersService(self.test_config)
         string_password = "super secret password"
         hashed_password = hashlib.sha256(string_password.encode()).hexdigest()
         user_1 = service.create_user(User(username="user",
                                           password_hash=hashed_password))
-        auth_1 = service.authenticate_user("user", string_password)
+        auth_1 = service.read_authenticated_user("user", string_password)
         self.assertEqual(auth_1, user_1)
-        auth_2 = service.authenticate_user("user", hashed_password)
+        auth_2 = service.read_authenticated_user("user", hashed_password)
         self.assertEqual(auth_2, user_1)
 
         with self.assertRaises(AuthenticationError):
-            service.authenticate_user("user", "bad password")
+            service.read_authenticated_user("user", "bad password")
 
         with self.assertRaises(UserNotFoundError):
-            service.authenticate_user("user_1", hashed_password)
+            service.read_authenticated_user("user_1", hashed_password)
+        service.shutdown()
 
+    def test_read_unauthenticated_user(self):
+        service = NeonUsersService(self.test_config)
+        user_1 = service.create_user(User(username="user",
+                                          password_hash="test"))
+        read_user = service.read_unauthenticated_user("user")
+        self.assertEqual(read_user, service.read_unauthenticated_user(user_1.user_id))
+        self.assertIsNone(read_user.password_hash)
+        self.assertEqual(read_user.tokens, [])
+        read_user.password_hash = user_1.password_hash
+        read_user.tokens = user_1.tokens
+        self.assertEqual(user_1, read_user)
+
+        with self.assertRaises(UserNotFoundError):
+            service.read_unauthenticated_user("not_a_user")
+        service.shutdown()
+
+    def test_update_user(self):
+        service = NeonUsersService(self.test_config)
+        user_1 = service.create_user(User(username="user",
+                                          password_hash="test"))
+
+        # Valid update
+        user_1.username = "new_username"
+        updated_user = service.update_user(user_1)
+        self.assertEqual(updated_user, user_1)
+
+        # Invalid password values
+        updated_user.password_hash = None
+        with self.assertRaises(ValueError):
+            service.update_user(updated_user)
+        updated_user.password_hash = ""
+        with self.assertRaises(ValueError):
+            service.update_user(updated_user)
+
+        # Valid password values
+        updated_user.password_hash = user_1.password_hash
+        updated_user = service.update_user(updated_user)
+        self.assertEqual(updated_user.password_hash, user_1.password_hash)
+
+        # Invalid token values
+        updated_user.tokens = None
+        with self.assertRaises(ValueError):
+            service.update_user(updated_user)
+
+        service.shutdown()
+
+    def test_delete_user(self):
+        pass

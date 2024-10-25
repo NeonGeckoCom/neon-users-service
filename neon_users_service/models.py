@@ -121,14 +121,14 @@ class TokenConfig(BaseModel):
 
 class User(BaseModel):
     username: str
-    password_hash: str
+    password_hash: Optional[str]
     user_id: str = Field(default_factory=lambda: str(uuid4()))
     created_timestamp: int = Field(default_factory=lambda: round(time()))
     neon: NeonUserConfig = NeonUserConfig()
     klat: KlatConfig = KlatConfig()
     llm: BrainForgeConfig = BrainForgeConfig()
     permissions: PermissionsConfig = PermissionsConfig()
-    tokens: List[TokenConfig] = []
+    tokens: Optional[List[TokenConfig]] = []
 
     def __eq__(self, other):
         return self.model_dump() == other.model_dump()

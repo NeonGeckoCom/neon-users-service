@@ -1,10 +1,11 @@
 import hashlib
 import re
+
 from copy import copy
 from typing import Optional
 from ovos_config import Configuration
 from neon_users_service.databases import UserDatabase
-from neon_users_service.exceptions import ConfigurationError, AuthenticationError
+from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError
 from neon_users_service.models import User
 
 
@@ -51,7 +52,20 @@ class NeonUsersService:
         user.password_hash = self._ensure_hashed(user.password_hash)
         return self.database.create_user(user)
 
-    def authenticate_user(self, username: str, password: str) -> User:
+    def read_unauthenticated_user(self, user_spec: str) -> User:
+        """
+        Helper to get a user from the database with sensitive data removed.
+        This is what most lookups should return; `authenticate_user` can be
+        used to get an un-redacted User object.
+        @param user_spec: username or user_id to retrieve
+        @returns: Redacted User object with sensitive information removed
+        """
+        user = self.database.read_user(user_spec)
+        user.password_hash = None
+        user.tokens = []
+        return user
+
+    def read_authenticated_user(self, username: str, password: str) -> User:
         """
         Helper to get a user from the database, only if the requested username
         and password match a database entry.
@@ -66,6 +80,32 @@ class NeonUsersService:
         if hashed_password != user.password_hash:
             raise AuthenticationError(f"Invalid password for {username}")
         return user
+
+    def update_user(self, user: User) -> User:
+        """
+        Helper to update a user. If the supplied user's password is not defined,
+        an `AuthenticationError` will be raised.
+        @param user: The updated user object to update in the database
+        @retruns: User object as it exists in the database, after updating
+        """
+        if not user.password_hash:
+            raise ValueError("Supplied user password is empty")
+        if not isinstance(user.tokens, list):
+            raise ValueError("Supplied tokens configuration is not a list")
+        # This will raise a `UserNotFound` exception if the user doesn't exist
+        return self.database.update_user(user)
+
+    def delete_user(self, user: User) -> User:
+        """
+        Helper to remove a user from the database. If the supplied user does not
+        match any database entry, a `UserNotFoundError` will be raised.
+        @param user: The user object to remove from the database
+        @returns: User object removed from the database
+        """
+        db_user = self.database.read_user_by_id(user.user_id)
+        if db_user != user:
+            raise UserNotFoundError(user)
+        return self.database.delete_user(user.user_id)
 
     def shutdown(self):
         """

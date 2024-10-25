@@ -21,3 +21,9 @@ class AuthenticationError(ValueError):
     """
     Raised when authentication fails for an existing valid user.
     """
+
+
+class DatabaseError(RuntimeError):
+    """
+    Raised when a database-related error occurs.
+    """
