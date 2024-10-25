@@ -17,7 +17,6 @@ jobs:
 #    uses: neongeckocom/.github/.github/workflows/docker_build_tests.yml@master
   unit_tests:
     strategy:
-      max-parallel: 1
       matrix:
         python-version: [3.8, 3.9, '3.10', '3.11', '3.12']
     runs-on: ubuntu-latest
