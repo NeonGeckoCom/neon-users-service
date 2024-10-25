@@ -129,16 +129,20 @@ class TestUsersService(TestCase):
         invalid_user = User(username="user", password_hash="test")
         incomplete_user = service.read_unauthenticated_user(user_1.user_id)
 
+        # Requested user not in the database
         with self.assertRaises(UserNotFoundError):
             service.delete_user(invalid_user)
 
+        # Request missing sensitive user information
         with self.assertRaises(UserNotMatchedError):
             service.delete_user(incomplete_user)
 
+        # Successful deletion
         deleted = service.delete_user(user_1)
         self.assertEqual(deleted, user_1)
 
-        with self.assertRaises(UserNotMatchedError):
+        # User already removed
+        with self.assertRaises(UserNotFoundError):
             service.read_unauthenticated_user(user_1.user_id)
 
         service.shutdown()
