@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from neon_users_service.exceptions import UserExistsError, UserNotFoundError
+from neon_users_service.exceptions import UserNotFoundError
 from neon_users_service.models import User
 
 
@@ -17,7 +17,7 @@ class UserDatabase(ABC):
     @abstractmethod
     def read_user_by_id(self, user_id: str) -> User:
         """
-        Get a `User` object by `user_id`. Raises a `UserNotExistsError` if the
+        Get a `User` object by `user_id`. Raises a `UserNotFoundError` if the
         input `user_id` is not found in the database
         @param user_id: `user_id` to look up
         @return: `User` object parsed from the database
@@ -27,16 +27,28 @@ class UserDatabase(ABC):
     def read_user_by_username(self, username: str) -> User:
         """
         Get a `User` object by `username`. Note that `username` is not
-        guaranteed to be static. Raises a `UserNotExistsError` if the
+        guaranteed to be static. Raises a `UserNotFoundError` if the
         input `username` is not found in the database
         @param username: `username` to look up
         @return: `User` object parsed from the database
         """
 
+    def read_user(self, user_spec: str) -> User:
+        """
+        Get a `User` object by username or user_id. Raises a 
+        `UserNotFoundError` if the user is not found. `user_id` is given priority
+        over `username`; it is possible (though unlikely) that a username
+        exists with the same spec as another user's user_id.
+        """
+        try:
+            return self.read_user_by_id(user_spec)
+        except UserNotFoundError:
+            return self.read_user_by_username(user_spec)
+
     @abstractmethod
     def update_user(self, user: User) -> User:
         """
-        Update a user entry in the database. Raises a `UserNotExistsError` if
+        Update a user entry in the database. Raises a `UserNotFoundError` if
         the input user's `user_id` is not found in the database.
         """
 
@@ -44,7 +56,7 @@ class UserDatabase(ABC):
     def delete_user(self, user_id: str) -> User:
         """
         Remove a user from the database if it exists. Raises a
-        `UserNotExistsError` if the input user's `user_id` is not found in the
+        `UserNotFoundError` if the input user's `user_id` is not found in the
         database.
         @param user_id: `user_id` to remove
         @return: User object removed from the database

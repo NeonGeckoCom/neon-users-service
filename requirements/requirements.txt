@@ -1,1 +1,2 @@
 pydantic~=2.0
+ovos-config~=0.1

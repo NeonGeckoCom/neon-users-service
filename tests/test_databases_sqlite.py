@@ -55,6 +55,11 @@ class TestSqlite(TestCase):
         self.assertEqual(self.database.read_user_by_id(user.user_id), user)
         self.assertEqual(self.database.read_user_by_username(user.username),
                          user)
+
+        # Retrieve using `read_user` method from base class
+        self.assertEqual(self.database.read_user(user.user_id), user)
+        self.assertEqual(self.database.read_user(user.username), user)
+
         # Retrieve nonexistent user raises exceptions
         with self.assertRaises(UserNotFoundError):
             self.database.read_user_by_id("fake-user-id")
