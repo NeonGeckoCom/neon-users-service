@@ -3,7 +3,7 @@ from typing import Dict, Any, List, Literal, Optional
 from enum import IntEnum
 from uuid import uuid4
 from pydantic import BaseModel, Field
-
+from datetime import date
 
 class AccessRoles(IntEnum):
     NONE = 0
@@ -19,7 +19,7 @@ class _UserConfig(BaseModel):
     middle_name: str = ""
     last_name: str = ""
     preferred_name: str = ""
-    dob: str = ""  # TODO: Define default schema
+    dob: Optional[date] = None
     email: str = ""
     avatar_url: str = ""
     about: str = ""

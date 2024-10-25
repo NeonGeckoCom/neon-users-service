@@ -1,8 +1,8 @@
 from unittest import TestCase
 
 from pydantic import ValidationError
-
-from neon_users_service.models import *
+from datetime import date
+from neon_users_service.models import NeonUserConfig, TokenConfig, User
 
 
 class TestModelValidation(TestCase):
@@ -13,7 +13,7 @@ class TestModelValidation(TestCase):
                   "middle_name": "James",
                   "last_name": "McKnight",
                   "preferred_name": "tester",
-                  "dob": "01/01/2001",
+                  "dob": "2001-01-01",
                   "email": "developers@neon.ai",
                   "extra_key": "This should be removed by validation"
                   },
@@ -42,12 +42,17 @@ class TestModelValidation(TestCase):
             NeonUserConfig(units={"time": 13})
         with self.assertRaises(ValidationError):
             NeonUserConfig(location={"latitude": "test"})
+        with self.assertRaises(ValidationError):
+            NeonUserConfig(user={"dob": "01/01/2001"})
 
         # Valid type casting
         config = NeonUserConfig(location={"latitude": "47.6765382",
                                           "longitude": "-122.2070775"})
         self.assertIsInstance(config.location.latitude, float)
         self.assertIsInstance(config.location.longitude, float)
+
+        config = NeonUserConfig(user={"dob": "2001-01-01"})
+        self.assertIsInstance(config.user.dob, date)
 
     def test_user_model(self):
         user_kwargs = dict(username="test",
