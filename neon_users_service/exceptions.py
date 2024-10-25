@@ -9,3 +9,9 @@ class UserNotFoundError(Exception):
     """
     Raised when trying to look up a user that does not exist.
     """
+
+
+class ConfigurationError(KeyError):
+    """
+    Raised when service configuration is not valid.
+    """
