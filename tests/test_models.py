@@ -42,30 +42,30 @@ class TestModelValidation(TestCase):
             NeonUserConfig(units={"time": 13})
         with self.assertRaises(ValidationError):
             NeonUserConfig(location={"latitude": "test"})
-        
+
         # Valid type casting
         config = NeonUserConfig(location={"latitude": "47.6765382",
-                                    "longitude": "-122.2070775"})
+                                          "longitude": "-122.2070775"})
         self.assertIsInstance(config.location.latitude, float)
         self.assertIsInstance(config.location.longitude, float)
 
     def test_user_model(self):
-        user_kwargs=dict(username="test",
-                            password_hash="test",
-                            tokens=[{"description": "test",
-                                     "client_id": "test_id",
-                                     "expiration_timestamp": 0,
-                                     "refresh_token": "",
-                                     "last_used_timestamp": 0}])
+        user_kwargs = dict(username="test",
+                           password_hash="test",
+                           tokens=[{"description": "test",
+                                    "client_id": "test_id",
+                                    "expiration_timestamp": 0,
+                                    "refresh_token": "",
+                                    "last_used_timestamp": 0}])
         default_user = User(**user_kwargs)
         self.assertIsInstance(default_user.tokens[0], TokenConfig)
         with self.assertRaises(ValidationError):
             User(username="test")
-        
+
         with self.assertRaises(ValidationError):
             User(username="test", password_hash="test",
                  tokens=[{"description": "test"}])
-        
+
         duplicate_user = User(**user_kwargs)
         self.assertNotEqual(default_user, duplicate_user)
         self.assertEqual(default_user.tokens, duplicate_user.tokens)

@@ -25,13 +25,8 @@ class SQLiteUserDatabase(UserDatabase):
         self.connection.commit()
 
     def create_user(self, user: User) -> User:
-        try:
-            if self.read_user_by_id(user.user_id):
-                raise UserExistsError(user.user_id)
-            elif self.read_user_by_username(user.username):
-                raise UserExistsError(user.username)
-        except UserNotExistsError:
-            pass
+        if self._check_user_exists(user):
+            raise UserExistsError(user)
 
         self.connection.execute(
             f'''INSERT INTO users VALUES 
