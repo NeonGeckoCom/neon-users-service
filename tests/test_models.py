@@ -65,7 +65,7 @@ class TestModelValidation(TestCase):
         default_user = User(**user_kwargs)
         self.assertIsInstance(default_user.tokens[0], TokenConfig)
         with self.assertRaises(ValidationError):
-            User(username="test")
+            User()
 
         with self.assertRaises(ValidationError):
             User(username="test", password_hash="test",

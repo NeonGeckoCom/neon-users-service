@@ -5,7 +5,8 @@ from os.path import join, dirname, isfile
 
 from neon_users_service.databases import UserDatabase
 from neon_users_service.databases.sqlite import SQLiteUserDatabase
-from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError
+from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError, \
+    UserNotMatchedError
 from neon_users_service.models import User
 from neon_users_service.service import NeonUsersService
 
@@ -131,13 +132,13 @@ class TestUsersService(TestCase):
         with self.assertRaises(UserNotFoundError):
             service.delete_user(invalid_user)
 
-        with self.assertRaises(UserNotFoundError):
+        with self.assertRaises(UserNotMatchedError):
             service.delete_user(incomplete_user)
 
         deleted = service.delete_user(user_1)
         self.assertEqual(deleted, user_1)
 
-        with self.assertRaises(UserNotFoundError):
+        with self.assertRaises(UserNotMatchedError):
             service.read_unauthenticated_user(user_1.user_id)
 
         service.shutdown()
