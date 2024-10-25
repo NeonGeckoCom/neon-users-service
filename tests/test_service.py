@@ -115,4 +115,22 @@ class TestUsersService(TestCase):
         service.shutdown()
 
     def test_delete_user(self):
-        pass
+        service = NeonUsersService(self.test_config)
+        user_1 = service.create_user(User(username="user",
+                                          password_hash="test"))
+        invalid_user = User(username="user", password_hash="test")
+        incomplete_user = service.read_unauthenticated_user(user_1.user_id)
+
+        with self.assertRaises(UserNotFoundError):
+            service.delete_user(invalid_user)
+
+        with self.assertRaises(UserNotFoundError):
+            service.delete_user(incomplete_user)
+
+        deleted = service.delete_user(user_1)
+        self.assertEqual(deleted, user_1)
+
+        with self.assertRaises(UserNotFoundError):
+            service.read_unauthenticated_user(user_1.user_id)
+
+        service.shutdown()
