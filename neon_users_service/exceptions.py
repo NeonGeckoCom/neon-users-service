@@ -15,3 +15,9 @@ class ConfigurationError(KeyError):
     """
     Raised when service configuration is not valid.
     """
+
+
+class AuthenticationError(ValueError):
+    """
+    Raised when authentication fails for an existing valid user.
+    """

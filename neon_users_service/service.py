@@ -4,7 +4,7 @@ from copy import copy
 from typing import Optional
 from ovos_config import Configuration
 from neon_users_service.databases import UserDatabase
-from neon_users_service.exceptions import ConfigurationError
+from neon_users_service.exceptions import ConfigurationError, AuthenticationError
 from neon_users_service.models import User
 
 
@@ -51,8 +51,24 @@ class NeonUsersService:
         user.password_hash = self._ensure_hashed(user.password_hash)
         return self.database.create_user(user)
 
+    def authenticate_user(self, username: str, password: str) -> User:
+        """
+        Helper to get a user from the database, only if the requested username
+        and password match a database entry.
+        @param username: The username or user ID to retrieve
+        @param password: The hashed or plaintext password for the username
+        @returns: User object from the database if authentication was successful
+        """
+        # This will raise a `UserNotFound` exception if the user doesn't exist
+        user = self.database.read_user(username)
+
+        hashed_password = self._ensure_hashed(password)
+        if hashed_password != user.password_hash:
+            raise AuthenticationError(f"Invalid password for {username}")
+        return user
+
     def shutdown(self):
         """
-        Shutdown the service
+        Shutdown the service.
         """
         self.database.shutdown()

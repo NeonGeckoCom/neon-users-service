@@ -5,7 +5,7 @@ from os.path import join, dirname, isfile
 
 from neon_users_service.databases import UserDatabase
 from neon_users_service.databases.sqlite import SQLiteUserDatabase
-from neon_users_service.exceptions import ConfigurationError
+from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError
 from neon_users_service.models import User
 from neon_users_service.service import NeonUsersService
 
@@ -48,3 +48,22 @@ class TestUsersService(TestCase):
         self.assertEqual(user_2.password_hash, hashed_password)
         # The input object should not be modified
         self.assertNotEqual(user_2, input_user_2)
+        service.shutdown()
+
+    def test_authenticate_user(self):
+        service = NeonUsersService(self.test_config)
+        string_password = "super secret password"
+        hashed_password = hashlib.sha256(string_password.encode()).hexdigest()
+        user_1 = service.create_user(User(username="user",
+                                          password_hash=hashed_password))
+        auth_1 = service.authenticate_user("user", string_password)
+        self.assertEqual(auth_1, user_1)
+        auth_2 = service.authenticate_user("user", hashed_password)
+        self.assertEqual(auth_2, user_1)
+
+        with self.assertRaises(AuthenticationError):
+            service.authenticate_user("user", "bad password")
+
+        with self.assertRaises(UserNotFoundError):
+            service.authenticate_user("user_1", hashed_password)
+

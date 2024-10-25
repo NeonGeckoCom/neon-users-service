@@ -71,6 +71,7 @@ setup(
     author_email='developers@neon.ai',
     license='NeonAI License v1.0',
     packages=find_packages(),
+    packate_data={'neon_users_service': ['default_config.yaml']},
     install_requires=get_requirements("requirements.txt"),
     extras_require={"test": get_requirements("test_requirements.txt")},
     zip_safe=True,
