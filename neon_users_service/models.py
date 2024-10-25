@@ -2,7 +2,7 @@ from time import time
 from typing import Dict, Any, List, Literal, Optional
 from enum import IntEnum
 from uuid import uuid4
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class AccessRoles(IntEnum):
@@ -113,8 +113,8 @@ class TokenConfig(BaseModel):
 class User(BaseModel):
     username: str
     password_hash: str
-    user_id: str = str(uuid4())
-    created_timestamp: int = round(time())
+    user_id: str = Field(default_factory=lambda: str(uuid4()))
+    created_timestamp: int = Field(default_factory=lambda: round(time()))
     neon: NeonUserConfig = NeonUserConfig()
     klat: KlatConfig = KlatConfig()
     llm: BrainForgeConfig = BrainForgeConfig()

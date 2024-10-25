@@ -5,7 +5,7 @@ from pydantic import ValidationError
 from neon_users_service.models import *
 
 
-class TestSqlite(TestCase):
+class TestModelValidation(TestCase):
     def test_neon_user_config(self):
         default = NeonUserConfig()
         valid_with_extras = NeonUserConfig(
@@ -20,7 +20,7 @@ class TestSqlite(TestCase):
             language={"input": ["en-us", "uk-ua"],
                       "output": ["en-us", "es-es"]},
             units={"time": 24, "date": "YMD", "measure": "metric"},
-            location={"lat": 47.6765382, "lon": -122.2070775,
+            location={"latitude": 47.6765382, "longitude": -122.2070775,
                       "name": "Kirkland, WA",
                       "timezone": "America/Los_Angeles"},
             extra_section={"test": True}
@@ -40,8 +40,32 @@ class TestSqlite(TestCase):
         # Validation errors
         with self.assertRaises(ValidationError):
             NeonUserConfig(units={"time": 13})
-        with self.assertRaises(AssertionError):
-            # TODO: This should fail validation
-            config = NeonUserConfig(location={"lat": "47.6765382",
-                                     "lon": "-122.2070775"})
-            assert config.location.latitude == 47.6765382
+        with self.assertRaises(ValidationError):
+            NeonUserConfig(location={"latitude": "test"})
+        
+        # Valid type casting
+        config = NeonUserConfig(location={"latitude": "47.6765382",
+                                    "longitude": "-122.2070775"})
+        self.assertIsInstance(config.location.latitude, float)
+        self.assertIsInstance(config.location.longitude, float)
+
+    def test_user_model(self):
+        user_kwargs=dict(username="test",
+                            password_hash="test",
+                            tokens=[{"description": "test",
+                                     "client_id": "test_id",
+                                     "expiration_timestamp": 0,
+                                     "refresh_token": "",
+                                     "last_used_timestamp": 0}])
+        default_user = User(**user_kwargs)
+        self.assertIsInstance(default_user.tokens[0], TokenConfig)
+        with self.assertRaises(ValidationError):
+            User(username="test")
+        
+        with self.assertRaises(ValidationError):
+            User(username="test", password_hash="test",
+                 tokens=[{"description": "test"}])
+        
+        duplicate_user = User(**user_kwargs)
+        self.assertNotEqual(default_user, duplicate_user)
+        self.assertEqual(default_user.tokens, duplicate_user.tokens)
