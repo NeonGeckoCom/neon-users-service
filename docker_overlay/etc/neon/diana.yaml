@@ -1,0 +1,9 @@
+log_level: INFO
+logs:
+  level_overrides:
+    error:
+      - pika
+    warning:
+      - filelock
+    info: []
+    debug: []

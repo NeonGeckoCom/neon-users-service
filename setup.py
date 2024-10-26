@@ -74,10 +74,16 @@ setup(
     package_data={'neon_users_service': ['default_config.yaml']},
     include_package_data=True,
     install_requires=get_requirements("requirements.txt"),
-    extras_require={"test": get_requirements("test_requirements.txt")},
+    extras_require={"test": get_requirements("test_requirements.txt"),
+                    "mq": get_requirements("mq.txt")},
     zip_safe=True,
     classifiers=[
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3',
-    ]
+    ],
+    entry_points={
+        'console_scripts': [
+            'neon_users_service=neon_users_service.__main__:main'
+        ]
+    }
 )

@@ -1,9 +1,8 @@
 from typing import Optional
 
 import pika.channel
+from ovos_utils import LOG, wait_for_exit_signal
 from ovos_config.config import Configuration
-from ovos_utils import LOG
-
 from neon_mq_connector.connector import MQConnector
 from neon_mq_connector.utils.network_utils import b64_to_dict, dict_to_b64
 from neon_users_service.models import MQRequest, User
