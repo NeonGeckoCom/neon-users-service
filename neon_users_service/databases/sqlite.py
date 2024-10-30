@@ -15,7 +15,7 @@ class SQLiteUserDatabase(UserDatabase):
     def __init__(self, db_path: Optional[str] = None):
         db_path = expanduser(db_path or "~/.local/share/neon/user-db.sqlite")
         makedirs(dirname(db_path), exist_ok=True)
-        self.connection = connect(db_path)
+        self.connection = connect(db_path, check_same_thread=False)
         self._db_lock = Lock()
         self.connection.execute(
             '''CREATE TABLE IF NOT EXISTS users

@@ -112,11 +112,16 @@ class PermissionsConfig(BaseModel):
 
 
 class TokenConfig(BaseModel):
-    description: str
+    username: str
     client_id: str
-    expiration_timestamp: int
+    permissions: dict
     refresh_token: str
-    last_used_timestamp: int
+    expiration: int
+    refresh_expiration: int
+    token_name: str
+    creation_timestamp: int
+    last_refresh_timestamp: int
+    access_token: Optional[str] = None
 
 
 class User(BaseModel):
