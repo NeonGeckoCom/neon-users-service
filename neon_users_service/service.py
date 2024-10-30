@@ -54,6 +54,19 @@ class NeonUsersService:
         user.password_hash = self._ensure_hashed(user.password_hash)
         return self.database.create_user(user)
 
+    def _read_user(self, user_spec: str, password: Optional[str] = None,
+                   auth_token: Optional[str] = None) -> User:
+        user = self.database.read_user(user_spec)
+        if password and self._ensure_hashed(password) == user.password_hash:
+            return user
+        elif auth_token and any((tok.access_token == auth_token
+                                 for tok in user.tokens)):
+            return user
+        else:
+            user.password_hash = None
+            user.tokens = []
+            return user
+
     def read_unauthenticated_user(self, user_spec: str) -> User:
         """
         Helper to get a user from the database with sensitive data removed.
@@ -62,24 +75,27 @@ class NeonUsersService:
         @param user_spec: username or user_id to retrieve
         @returns: Redacted User object with sensitive information removed
         """
-        user = self.database.read_user(user_spec)
-        user.password_hash = None
-        user.tokens = []
-        return user
+        return self._read_user(user_spec)
 
-    def read_authenticated_user(self, username: str, password: str) -> User:
+    def read_authenticated_user(self, username: str,
+                                password: Optional[str] = None,
+                                auth_token: Optional[str] = None) -> User:
         """
         Helper to get a user from the database, only if the requested username
         and password match a database entry.
         @param username: The username or user ID to retrieve
         @param password: The hashed or plaintext password for the username
+        @param auth_token: A valid authentication token for the username
         @returns: User object from the database if authentication was successful
         """
         # This will raise a `UserNotFound` exception if the user doesn't exist
-        user = self.database.read_user(username)
-
-        hashed_password = self._ensure_hashed(password)
-        if hashed_password != user.password_hash:
+        if password:
+            user = self._read_user(username, password)
+        elif auth_token:
+            user = self._read_user(username, auth_token=auth_token)
+        else:
+            raise AuthenticationError("No password or token provided")
+        if user.password_hash is None:
             raise AuthenticationError(f"Invalid password for {username}")
         return user
 

@@ -1,7 +1,7 @@
 from typing import Optional
 
 import pika.channel
-from ovos_utils import LOG, wait_for_exit_signal
+from ovos_utils import LOG
 from ovos_config.config import Configuration
 from neon_mq_connector.connector import MQConnector
 from neon_mq_connector.utils.network_utils import b64_to_dict, dict_to_b64
@@ -39,9 +39,10 @@ class NeonUsersConnector(MQConnector):
                 mq_req.user.password_hash = mq_req.password
                 user = self.service.create_user(mq_req.user)
             elif mq_req.operation == "read":
-                if mq_req.password:
+                if mq_req.password or mq_req.access_token:
                     user = self.service.read_authenticated_user(mq_req.username,
-                                                                mq_req.password)
+                                                                mq_req.password,
+                                                                mq_req.access_token)
                 else:
                     user = self.service.read_unauthenticated_user(
                         mq_req.username)

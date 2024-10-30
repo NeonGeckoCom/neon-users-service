@@ -110,6 +110,9 @@ class PermissionsConfig(BaseModel):
     hub: AccessRoles = AccessRoles.NONE
     llm: AccessRoles = AccessRoles.NONE
 
+    class Config:
+        use_enum_values = True
+
 
 class TokenConfig(BaseModel):
     username: str
@@ -143,4 +146,5 @@ class MQRequest(BaseModel):
     operation: Literal["create", "read", "update", "delete"]
     username: str
     password: Optional[str] = None
+    access_token: Optional[str] = None
     user: Optional[User] = None
