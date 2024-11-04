@@ -8,7 +8,7 @@ from typing import Optional, List
 
 from neon_users_service.databases import UserDatabase
 from neon_users_service.exceptions import UserNotFoundError, UserExistsError, DatabaseError
-from neon_users_service.models import User, AccessRoles
+from neon_data_models.models.user.database import User
 
 
 class SQLiteUserDatabase(UserDatabase):

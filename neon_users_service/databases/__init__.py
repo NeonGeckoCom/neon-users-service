@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from neon_users_service.exceptions import UserNotFoundError
-from neon_users_service.models import User
+from neon_data_models.models.user.database import User
 
 
 class UserDatabase(ABC):

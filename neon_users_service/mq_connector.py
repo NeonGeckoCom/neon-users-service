@@ -6,7 +6,8 @@ from ovos_config.config import Configuration
 from neon_mq_connector.connector import MQConnector
 from neon_mq_connector.utils.network_utils import b64_to_dict, dict_to_b64
 from neon_users_service.exceptions import UserNotFoundError, AuthenticationError, UserNotMatchedError, UserExistsError
-from neon_users_service.models import MQRequest, User
+from neon_data_models.models.user.database import User
+from neon_data_models.models.api.mq import UserDbRequest
 
 from neon_users_service.service import NeonUsersService
 
@@ -20,7 +21,7 @@ class NeonUsersConnector(MQConnector):
         self.service = NeonUsersService(module_config)
 
     def parse_mq_request(self, mq_req: dict) -> dict:
-        mq_req = MQRequest(**mq_req)
+        mq_req = UserDbRequest(**mq_req)
 
         # Ensure supplied `user` object is consistent with request params
         if mq_req.user and mq_req.username != mq_req.user.username:
