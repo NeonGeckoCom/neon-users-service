@@ -7,7 +7,7 @@ from neon_users_service.databases import UserDatabase
 from neon_users_service.databases.sqlite import SQLiteUserDatabase
 from neon_users_service.exceptions import ConfigurationError, AuthenticationError, UserNotFoundError, \
     UserNotMatchedError
-from neon_users_service.models import User
+from neon_data_models.models.user import User
 from neon_users_service.service import NeonUsersService
 
 

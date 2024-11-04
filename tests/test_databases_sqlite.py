@@ -6,7 +6,8 @@ from unittest import TestCase
 
 from neon_users_service.databases.sqlite import SQLiteUserDatabase
 from neon_users_service.exceptions import UserExistsError, UserNotFoundError
-from neon_users_service.models import User, AccessRoles
+from neon_data_models.models.user import User
+from neon_data_models.enum import AccessRoles
 
 
 class TestSqlite(TestCase):
