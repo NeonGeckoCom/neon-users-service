@@ -8,7 +8,7 @@ from neon_users_service.databases import UserDatabase
 from neon_users_service.exceptions import (ConfigurationError,
                                            AuthenticationError,
                                            UserNotMatchedError)
-from neon_users_service.models import User
+from neon_data_models.models.user import User
 
 
 class NeonUsersService:
