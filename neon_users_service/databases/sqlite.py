@@ -2,12 +2,12 @@ import json
 
 from os import makedirs
 from os.path import expanduser, dirname
-from sqlite3 import connect, Cursor
+from sqlite3 import connect
 from threading import Lock
 from typing import Optional, List
 
 from neon_users_service.databases import UserDatabase
-from neon_users_service.exceptions import UserNotFoundError, UserExistsError, DatabaseError
+from neon_users_service.exceptions import UserNotFoundError, DatabaseError
 from neon_data_models.models.user.database import User
 
 
@@ -26,9 +26,7 @@ class SQLiteUserDatabase(UserDatabase):
         )
         self.connection.commit()
 
-    def create_user(self, user: User) -> User:
-        if self._check_user_exists(user):
-            raise UserExistsError(user)
+    def _db_create_user(self, user: User) -> User:
         with self._db_lock:
             self.connection.execute(
                 f'''INSERT INTO users VALUES 
@@ -72,15 +70,7 @@ class SQLiteUserDatabase(UserDatabase):
             cursor.close()
         return User(**json.loads(self._parse_lookup_results(username, rows)))
 
-    def update_user(self, user: User) -> User:
-        # Lookup user to ensure they exist in the database
-        existing_id = self.read_user_by_id(user.user_id)
-        try:
-            if self.read_user_by_username(user.username) != existing_id:
-                raise UserExistsError(f"Another user with username "
-                                      f"'{user.username}' already exists")
-        except UserNotFoundError:
-            pass
+    def _db_update_user(self, user: User) -> User:
         with self._db_lock:
             self.connection.execute(
                 f'''UPDATE users SET username = '{user.username}',
@@ -91,13 +81,12 @@ class SQLiteUserDatabase(UserDatabase):
             self.connection.commit()
         return self.read_user_by_id(user.user_id)
 
-    def delete_user(self, user_id: str) -> User:
-        # Lookup user to ensure they exist in the database
-        user_to_delete = self.read_user_by_id(user_id)
+    def _db_delete_user(self, user: User) -> User:
         with self._db_lock:
-            self.connection.execute(f"DELETE FROM users WHERE user_id = '{user_id}'")
+            self.connection.execute(
+                f"DELETE FROM users WHERE user_id = '{user.user_id}'")
             self.connection.commit()
-        return user_to_delete
+        return user
 
     def shutdown(self):
         self.connection.close()

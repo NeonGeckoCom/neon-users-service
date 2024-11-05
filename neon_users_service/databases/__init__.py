@@ -1,15 +1,27 @@
 from abc import ABC, abstractmethod
 
-from neon_users_service.exceptions import UserNotFoundError
+from neon_users_service.exceptions import UserNotFoundError, UserExistsError
 from neon_data_models.models.user.database import User
 
 
 class UserDatabase(ABC):
-    @abstractmethod
     def create_user(self, user: User) -> User:
         """
         Add a new user to the database. Raises a `UserExistsError` if the input
         `user` already exists in the database (by `username` or `user_id`).
+        @param user: `User` object to insert to the database
+        @return: `User` object inserted into the database
+        """
+        if self._check_user_exists(user):
+            raise UserExistsError(user)
+        return self._db_create_user(user)
+
+    @abstractmethod
+    def _db_create_user(self, user: User) -> User:
+        """
+        Add a new user to the database. The `user` object has already been
+        validated as unique, so this just needs to perform the database
+        transaction.
         @param user: `User` object to insert to the database
         @return: `User` object inserted into the database
         """
@@ -45,20 +57,52 @@ class UserDatabase(ABC):
         except UserNotFoundError:
             return self.read_user_by_username(user_spec)
 
-    @abstractmethod
     def update_user(self, user: User) -> User:
         """
         Update a user entry in the database. Raises a `UserNotFoundError` if
         the input user's `user_id` is not found in the database.
+        @param user: `User` object to update in the database
+        @return: Updated `User` object read from the database
         """
+        # Lookup user to ensure they exist in the database
+        existing_id = self.read_user_by_id(user.user_id)
+        try:
+            if self.read_user_by_username(user.username) != existing_id:
+                raise UserExistsError(f"Another user with username "
+                                      f"'{user.username}' already exists")
+        except UserNotFoundError:
+            pass
+        return self._db_update_user(user)
 
     @abstractmethod
+    def _db_update_user(self, user: User) -> User:
+        """
+        Update a user entry in the database. The `user` object has already been
+        validated as existing and changes valid, so this just needs to perform
+        the database transaction.
+        @param user: `User` object to update in the database
+        @return: Updated `User` object read from the database
+        """
+
     def delete_user(self, user_id: str) -> User:
         """
         Remove a user from the database if it exists. Raises a
         `UserNotFoundError` if the input user's `user_id` is not found in the
         database.
         @param user_id: `user_id` to remove
+        @return: User object removed from the database
+        """
+        # Lookup user to ensure they exist in the database
+        user_to_delete = self.read_user_by_id(user_id)
+        return self._db_delete_user(user_to_delete)
+
+    @abstractmethod
+    def _db_delete_user(self, user: User) -> User:
+        """
+        Remove a user from the database if it exists. The `user` object has
+        already been validated as existing, so this just needs to perform the
+        database transaction.
+        @param user: User object to remove
         @return: User object removed from the database
         """
 
