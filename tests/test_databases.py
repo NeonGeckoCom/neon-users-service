@@ -117,6 +117,7 @@ class TestSqlite(TestCase):
 
 class TestMongoDb(TestCase):
     test_config = json.loads(environ.get("MONGO_TEST_CONFIG"))
+    test_config['collection_name'] = f"{test_config['collection_name']}{time()}"
     from neon_users_service.databases.mongodb import MongoDbUserDatabase
     database = MongoDbUserDatabase(**test_config)
     test_user = User(username="test_user", password_hash="password")
@@ -126,6 +127,11 @@ class TestMongoDb(TestCase):
             self.database.delete_user(self.test_user.user_id)
         except UserNotFoundError:
             pass
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.database.db.drop_collection(cls.test_config['collection_name'])
+        cls.database.shutdown()
 
     def test_create_user(self):
         # Create User

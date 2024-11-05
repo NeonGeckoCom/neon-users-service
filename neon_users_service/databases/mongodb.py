@@ -9,8 +9,8 @@ class MongoDbUserDatabase(UserDatabase):
                  db_name: str = "neon-users", collection_name: str = "users"):
         connection_string = f"mongodb://{db_user}:{db_pass}@{db_host}:{db_port}"
         self.client = MongoClient(connection_string)
-        db = self.client[db_name]
-        self.collection = db[collection_name]
+        self.db = self.client[db_name]
+        self.collection = self.db[collection_name]
 
     def _db_create_user(self, user: User) -> User:
         self.collection.insert_one({**user.model_dump(),
