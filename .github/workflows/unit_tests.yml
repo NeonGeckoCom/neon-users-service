@@ -33,6 +33,8 @@ jobs:
       - name: Unit Tests
         run: |
           pytest tests  --doctest-modules --junitxml=tests/unit-test-results.xml
+        env:
+          MONGO_TEST_CONFIG: ${{secrets.MONGO_TEST_CONFIG}}
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
