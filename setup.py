@@ -75,7 +75,8 @@ setup(
     include_package_data=True,
     install_requires=get_requirements("requirements.txt"),
     extras_require={"test": get_requirements("test_requirements.txt"),
-                    "mq": get_requirements("mq.txt")},
+                    "mq": get_requirements("mq.txt"),
+                    "mongodb": get_requirements("mongodb.txt")},
     zip_safe=True,
     classifiers=[
         'Intended Audience :: Developers',
