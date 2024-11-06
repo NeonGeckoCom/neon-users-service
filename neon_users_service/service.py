@@ -25,6 +25,9 @@ class NeonUsersService:
         if module == "sqlite":
             from neon_users_service.databases.sqlite import SQLiteUserDatabase
             return SQLiteUserDatabase(**module_config)
+        elif module == "mongodb":
+            from neon_users_service.databases.mongodb import MongoDbUserDatabase
+            return MongoDbUserDatabase(**module_config)
         # Other supported databases may be added here
 
     @staticmethod

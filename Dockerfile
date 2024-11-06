@@ -17,6 +17,6 @@ RUN apt-get update && \
 
 ADD . /neon_users_service
 WORKDIR /neon_users_service
-RUN pip install .[mq]
+RUN pip install .[mq,mongodb]
 
 CMD ["neon_users_service"]
