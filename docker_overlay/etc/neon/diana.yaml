@@ -7,3 +7,7 @@ logs:
       - filelock
     info: []
     debug: []
+neon_users_service:
+  module: sqlite
+  sqlite:
+    db_path: /data/neon-users-db.sqlite

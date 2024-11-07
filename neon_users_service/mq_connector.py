@@ -21,7 +21,14 @@ class NeonUsersConnector(MQConnector):
         self.service = NeonUsersService(module_config)
 
     def parse_mq_request(self, mq_req: dict) -> dict:
+        """
+        Handle a request to interact with the user database. Requests should be
+        validated to ensure the user has proper permissions to perform the
+        requested action.
+        """
         mq_req = UserDbRequest(**mq_req)
+
+        # TODO: Define method for an admin user to modify other users (incl. permissions)
 
         # Ensure supplied `user` object is consistent with request params
         if mq_req.user and mq_req.username != mq_req.user.username:
@@ -35,6 +42,7 @@ class NeonUsersConnector(MQConnector):
                     return {"success": False,
                             "error": "Empty password provided"}
                 if not mq_req.user:
+                    # TODO: Should this be allowed?
                     mq_req.user = User(username=mq_req.username,
                                        password_hash=mq_req.password)
                 mq_req.user.password_hash = mq_req.password
@@ -48,10 +56,18 @@ class NeonUsersConnector(MQConnector):
                     user = self.service.read_unauthenticated_user(
                         mq_req.username)
             elif mq_req.operation == "update":
+                # Get the existing user, maybe raising an AuthenticationError
+                existing = self.service.read_authenticated_user(mq_req.username,
+                                                                mq_req.password,
+                                                                mq_req.access_token)
                 if mq_req.password:
                     mq_req.user.password_hash = mq_req.password
+
+                # Do not allow permissions changes via this endpoint
+                mq_req.user.permissions = existing.permissions
                 user = self.service.update_user(mq_req.user)
             elif mq_req.operation == "delete":
+                # If the passed User object isn't an exact match, it will fail
                 user = self.service.delete_user(mq_req.user)
             else:
                 raise RuntimeError(f"Invalid operation requested: "
