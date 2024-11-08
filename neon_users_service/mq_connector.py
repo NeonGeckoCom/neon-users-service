@@ -3,17 +3,21 @@ from typing import Optional
 import pika.channel
 from ovos_utils import LOG
 from ovos_config.config import Configuration
+
+from neon_data_models.enum import AccessRoles
 from neon_mq_connector.connector import MQConnector
 from neon_mq_connector.utils.network_utils import b64_to_dict, dict_to_b64
 from neon_users_service.exceptions import UserNotFoundError, AuthenticationError, UserNotMatchedError, UserExistsError
-from neon_data_models.models.user.database import User
-from neon_data_models.models.api.mq import UserDbRequest
+from neon_data_models.models.api.mq import (UserDbRequest, CreateUserRequest,
+                                            ReadUserRequest, UpdateUserRequest,
+                                            DeleteUserRequest)
 
 from neon_users_service.service import NeonUsersService
 
 
 class NeonUsersConnector(MQConnector):
-    def __init__(self, config: Optional[dict], service_name: str = "neon_users_service"):
+    def __init__(self, config: Optional[dict],
+                 service_name: str = "neon_users_service"):
         MQConnector.__init__(self, config, service_name)
         self.vhost = '/neon_users'
         module_config = (config or Configuration()).get('neon_users_service',
@@ -22,56 +26,62 @@ class NeonUsersConnector(MQConnector):
 
     def parse_mq_request(self, mq_req: dict) -> dict:
         """
-        Handle a request to interact with the user database. Requests should be
-        validated to ensure the user has proper permissions to perform the
-        requested action.
+        Handle a request to interact with the user database.
+
+        Create: Accepts a new User object and adds it to the database
+        Read: Accepts a Username or User ID and either an Access Token or
+            Password. If the authenticating user is not the same as the requested
+            user, then sensitive authentication information will be redacted from
+            the returned object.
+        Update: Updates the database with the supplied User. If
+            `auth_username` and `auth_password` are supplied, they will be used
+            to determine permissions for this transaction, otherwise permissions
+            will be read for the user being updated. A user may modify their own
+            configuration (except permissions) and any user with a diana role of
+            `ADMIN` or higher may modify other users.
+        Delete: Deletes a User from the database. The request object must match
+            the database entry exactly, so no additional validation is required.
         """
         mq_req = UserDbRequest(**mq_req)
 
-        # TODO: Define method for an admin user to modify other users (incl. permissions)
-
-        # Ensure supplied `user` object is consistent with request params
-        if mq_req.user and mq_req.username != mq_req.user.username:
-            return {"success": False,
-                    "error": f"Supplied username ({mq_req.username}) "
-                             f"Does not match user object "
-                             f"({mq_req.user.username})"}
         try:
-            if mq_req.operation == "create":
-                if not mq_req.password:
-                    return {"success": False,
-                            "error": "Empty password provided"}
-                if not mq_req.user:
-                    # TODO: Should this be allowed?
-                    mq_req.user = User(username=mq_req.username,
-                                       password_hash=mq_req.password)
-                mq_req.user.password_hash = mq_req.password
+            if isinstance(mq_req, CreateUserRequest):
                 user = self.service.create_user(mq_req.user)
-            elif mq_req.operation == "read":
-                if mq_req.password or mq_req.access_token:
-                    user = self.service.read_authenticated_user(mq_req.username,
+            elif isinstance(mq_req, ReadUserRequest):
+                if mq_req.user_spec == mq_req.auth_user_spec:
+                    user = self.service.read_authenticated_user(mq_req.user_spec,
                                                                 mq_req.password,
                                                                 mq_req.access_token)
                 else:
+                    auth_user = self.service.read_authenticated_user(
+                        mq_req.auth_user_spec, mq_req.password,
+                        mq_req.access_token)
+                    if auth_user.permissions.diana < AccessRoles.ADMIN and \
+                            auth_user.permissions.diana != AccessRoles.READ_USERS:
+                        raise PermissionError(f"User {auth_user.username} does "
+                                              f"not have permission to read "
+                                              f"other users")
                     user = self.service.read_unauthenticated_user(
-                        mq_req.username)
-            elif mq_req.operation == "update":
-                # Get the existing user, maybe raising an AuthenticationError
-                existing = self.service.read_authenticated_user(mq_req.username,
-                                                                mq_req.password,
-                                                                mq_req.access_token)
-                if mq_req.password:
-                    mq_req.user.password_hash = mq_req.password
+                        mq_req.user_spec)
+            elif isinstance(mq_req, UpdateUserRequest):
+                # Get the authenticating user, maybe raising an AuthenticationError
+                auth = self.service.read_authenticated_user(mq_req.auth_username,
+                                                            mq_req.auth_password)
+                if auth.permissions.diana < AccessRoles.ADMIN:
+                    if auth.user_id != mq_req.user.user_id:
+                        raise PermissionError(f"User {auth.username} does not "
+                                              f"have permission to modify "
+                                              f"other users")
+                    # Do not allow this non-admin to change their permissions
+                    mq_req.user.permissions = auth.permissions
 
-                # Do not allow permissions changes via this endpoint
-                mq_req.user.permissions = existing.permissions
                 user = self.service.update_user(mq_req.user)
-            elif mq_req.operation == "delete":
-                # If the passed User object isn't an exact match, it will fail
+            elif isinstance(mq_req, DeleteUserRequest):
+                # If the passed User object isn't an exact match, this will fail
                 user = self.service.delete_user(mq_req.user)
             else:
-                raise RuntimeError(f"Invalid operation requested: "
-                                   f"{mq_req.operation}")
+                raise RuntimeError(f"Unsupported operation requested: "
+                                   f"{mq_req}")
             return {"success": True, "user": user.model_dump()}
         except UserExistsError:
             return {"success": False, "error": "User already exists",

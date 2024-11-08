@@ -29,6 +29,13 @@ class AuthenticationError(ValueError):
     """
 
 
+class PermissionsError(Exception):
+    """
+    Raised when a user does not have sufficient permissions to perform the
+    requested action.
+    """
+
+
 class DatabaseError(RuntimeError):
     """
     Raised when a database-related error occurs.
