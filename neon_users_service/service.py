@@ -4,6 +4,8 @@ import re
 from copy import copy
 from typing import Optional
 from ovos_config import Configuration
+
+from neon_data_models.models.api.jwt import HanaToken
 from neon_users_service.databases import UserDatabase
 from neon_users_service.exceptions import (ConfigurationError,
                                            AuthenticationError,
@@ -58,11 +60,11 @@ class NeonUsersService:
         return self.database.create_user(user)
 
     def _read_user(self, user_spec: str, password: Optional[str] = None,
-                   auth_token: Optional[str] = None) -> User:
+                   auth_token: Optional[HanaToken] = None) -> User:
         user = self.database.read_user(user_spec)
         if password and self._ensure_hashed(password) == user.password_hash:
             return user
-        elif auth_token and any((tok.access_token == auth_token
+        elif auth_token and any((tok.jti == f"{auth_token.jti}.refresh"
                                  for tok in user.tokens)):
             return user
         else:
@@ -82,7 +84,7 @@ class NeonUsersService:
 
     def read_authenticated_user(self, username: str,
                                 password: Optional[str] = None,
-                                auth_token: Optional[str] = None) -> User:
+                                auth_token: Optional[HanaToken] = None) -> User:
         """
         Helper to get a user from the database, only if the requested username
         and password match a database entry.
