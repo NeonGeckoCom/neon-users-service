@@ -56,8 +56,7 @@ class NeonUsersConnector(MQConnector):
                     auth_user = self.service.read_authenticated_user(
                         mq_req.auth_user_spec, mq_req.password,
                         mq_req.access_token)
-                    if auth_user.permissions.users < AccessRoles.USER and \
-                            auth_user.permissions.users != AccessRoles.RW_USERS:
+                    if auth_user.permissions.users < AccessRoles.USER:
                         raise PermissionError(f"User {auth_user.username} does "
                                               f"not have permission to read "
                                               f"other users")
