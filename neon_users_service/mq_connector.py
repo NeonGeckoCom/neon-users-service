@@ -56,8 +56,8 @@ class NeonUsersConnector(MQConnector):
                     auth_user = self.service.read_authenticated_user(
                         mq_req.auth_user_spec, mq_req.password,
                         mq_req.access_token)
-                    if auth_user.permissions.diana < AccessRoles.ADMIN and \
-                            auth_user.permissions.diana != AccessRoles.READ_USERS:
+                    if auth_user.permissions.users < AccessRoles.USER and \
+                            auth_user.permissions.users != AccessRoles.RW_USERS:
                         raise PermissionError(f"User {auth_user.username} does "
                                               f"not have permission to read "
                                               f"other users")
@@ -67,7 +67,7 @@ class NeonUsersConnector(MQConnector):
                 # Get the authenticating user, maybe raising an AuthenticationError
                 auth = self.service.read_authenticated_user(mq_req.auth_username,
                                                             mq_req.auth_password)
-                if auth.permissions.diana < AccessRoles.ADMIN:
+                if auth.permissions.users < AccessRoles.ADMIN:
                     if auth.user_id != mq_req.user.user_id:
                         raise PermissionError(f"User {auth.username} does not "
                                               f"have permission to modify "
