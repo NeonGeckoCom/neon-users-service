@@ -69,7 +69,7 @@ setup(
     url='https://github.com/NeonGeckoCom/neon-users-service',
     author='Neongecko',
     author_email='developers@neon.ai',
-    license='NeonAI License v1.0',
+    license='AGPL-3.0-only',
     packages=find_packages(),
     package_data={'neon_users_service': ['default_config.yaml']},
     include_package_data=True,
