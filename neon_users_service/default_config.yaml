@@ -1,0 +1,4 @@
+neon_users_service:
+  module: sqlite
+  sqlite:
+    db_path: ~/.local/share/neon/user-db.sqlite

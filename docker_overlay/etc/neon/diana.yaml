@@ -1,0 +1,13 @@
+log_level: INFO
+logs:
+  level_overrides:
+    error:
+      - pika
+    warning:
+      - filelock
+    info: []
+    debug: []
+neon_users_service:
+  module: sqlite
+  sqlite:
+    db_path: /data/neon-users-db.sqlite
