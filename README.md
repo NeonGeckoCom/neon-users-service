@@ -74,5 +74,6 @@ user: <User object to delete>
 
 ___
 ### Licensing
-This project is free to use under the GNU Affero General Public License. Contact
-info@neon.ai for commercial licensing options.
+This project is free to use under the 
+[GNU Affero General Public License](https://www.gnu.org/licenses/why-affero-gpl.html).
+Contact info@neon.ai for commercial licensing options.
