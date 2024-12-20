@@ -71,3 +71,8 @@ operation: delete
 username: <username_to_delete>
 user: <User object to delete>
 ```
+
+___
+### Licensing
+This project is free to use under the GNU Affero General Public License. Contact
+info@neon.ai for commercial licensing options.
