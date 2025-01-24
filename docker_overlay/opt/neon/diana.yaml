@@ -5,8 +5,18 @@ logs:
       - pika
     warning:
       - filelock
-    info: []
+      - watchdog
+      - httpcore
+    info:
+      - asyncio
     debug: []
+MQ:
+  server: neon-rabbitmq
+  port: 5672
+  users:
+    mq_handler:
+      user: neon_api_utils
+      password: Klatchat2021
 neon_users_service:
   module: sqlite
   sqlite:
