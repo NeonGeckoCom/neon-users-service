@@ -17,6 +17,7 @@ from typing import Optional
 
 import pika.channel
 from ovos_utils import LOG
+from ovos_utils.process_utils import ProcessStatus
 from ovos_config.config import Configuration
 
 from neon_data_models.enum import AccessRoles
@@ -34,10 +35,18 @@ class NeonUsersConnector(MQConnector):
     def __init__(self, config: Optional[dict],
                  service_name: str = "neon_users_service"):
         MQConnector.__init__(self, config, service_name)
+        self.status = ProcessStatus(service_name)
+        self.status.set_alive()
         self.vhost = '/neon_users'
         module_config = (config or Configuration()).get('neon_users_service',
                                                         {})
         self.service = NeonUsersService(module_config)
+
+    def check_health(self) -> bool:
+        if not MQConnector.check_health(self):
+            self.status.set_error("MQConnector health check failed")
+            return False
+        return self.status.check_ready
 
     def parse_mq_request(self, mq_req: dict) -> dict:
         """
@@ -153,3 +162,13 @@ class NeonUsersConnector(MQConnector):
         self.register_consumer("neon_users_consumer", self.vhost,
                                "neon_users_input", self.handle_request,
                                auto_ack=False)
+
+    def stop(self):
+        self.status.set_stopping()
+        MQConnector.stop(self)
+
+    def run(self):
+        MQConnector.run(self)
+        LOG.info("Users service is running")
+        self.status.set_ready()
+
