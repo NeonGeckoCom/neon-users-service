@@ -46,7 +46,7 @@ class NeonUsersConnector(MQConnector):
         if not MQConnector.check_health(self):
             self.status.set_error("MQConnector health check failed")
             return False
-        return self.status.check_ready
+        return self.status.check_ready()
 
     def parse_mq_request(self, mq_req: dict) -> dict:
         """

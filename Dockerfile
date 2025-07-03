@@ -8,7 +8,7 @@ ENV OVOS_CONFIG_FILENAME=diana.yaml
 ENV OVOS_DEFAULT_CONFIG=/opt/neon/diana.yaml
 ENV XDG_CONFIG_HOME=/config
 ENV XDG_DATA_HOME=/data
-ENV HEALTHCHECK_PORT=8080
+ENV HEALTHCHECK_PORT=8000
 COPY docker_overlay/ /
 
 RUN apt-get update && \
