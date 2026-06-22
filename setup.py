@@ -71,7 +71,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'neon_users_service=neon_users_service.__main__:main'
+            'neon_users_service=neon_users_service.__main__:main',
+            'neon-users-service-cli=neon_users_service.cli:neon_users_service_cli'
         ]
     }
 )
