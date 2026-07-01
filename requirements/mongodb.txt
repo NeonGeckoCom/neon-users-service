@@ -1,1 +1,1 @@
-pymongo~=4.0
+pymongo~=4.0,<4.14  # 4.14 drops support for MongoDB 4.0 (wire version 7)

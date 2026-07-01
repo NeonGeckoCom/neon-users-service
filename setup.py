@@ -1,4 +1,4 @@
-# Copyright (C) 2025 Neongecko.com Inc.
+# Copyright (C) 2008-2026 Neongecko.com Inc.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
@@ -71,7 +71,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'neon_users_service=neon_users_service.__main__:main'
+            'neon_users_service=neon_users_service.__main__:main',
+            'neon-users-service-cli=neon_users_service.cli:neon_users_service_cli'
         ]
     }
 )
